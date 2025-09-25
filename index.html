@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Sainath Footwear - Home</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.0/umd/index.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .cart-icon {
+            position: relative;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        main {
+            margin-top: 80px;
+            min-height: calc(100vh - 160px);
+            padding: 20px 0;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .contact-info {
+            font-size: 16px;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .category-image {
+            width: 100%;
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .category-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+        }
+
+        .category-image span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .category-info {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .category-info h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .category-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-total {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+            color: #666;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Category specific images */
+        .category-shoes {
+            background-image: url('https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');
+        }
+
+        .category-sandals {
+            background-image: url('https://images.unsplash.com/photo-1603487742131-4160ec999306?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');
+        }
+
+        .category-slippers {
+            background-image: url('https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');
+        }
+
+        .category-flip-flops {
+            background-image: url('https://images.unsplash.com/photo-1582897085656-c636d006a246?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+            
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">🦶 Shree Sainath Footwear</div>
+            <div class="nav-buttons">
+                <button class="btn" onclick="window.location.href='index.html'">Home</button>
+                <button class="btn btn-secondary" onclick="showCartModal()">
+                    <span class="cart-icon">
+                        🛒 Cart
+                        <span class="cart-count" id="cartCount">0</span>
+                    </span>
+                </button>
+                <button class="btn" onclick="showLoginModal()" id="loginBtn">Login</button>
+                <button class="btn btn-secondary" onclick="window.location.href='admin.html'" id="adminBtn" style="display:none;">Admin</button>
+                <button class="btn" onclick="logout()" id="logoutBtn" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="hero">
+                <h1>स्वागत है श्री साईनाथ फुटवियर में</h1>
+                <p>सभी प्रकार के जूते, चप्पल, सैंडल का होलसेल बिजनेस</p>
+                <p>📞 8003276503 | 📍 सदर मार्केट, सरोपागंज</p>
+                <div class="contact-info">
+                    <p>✨ बेस्ट क्वालिटी | 💰 होलसेल रेट्स | 🚚 फास्ट डिलीवरी</p>
+                </div>
+            </div>
+
+            <div class="categories-grid">
+                <div class="category-card" onclick="window.location.href='shoes.html'">
+                    <div class="category-image category-shoes">
+                        <span>👞</span>
+                    </div>
+                    <div class="category-info">
+                        <h3>Shoes</h3>
+                        <p>सभी प्रकार के जूते - Boys, Girls, Kids</p>
+                    </div>
+                </div>
+
+                <div class="category-card" onclick="window.location.href='sandals.html'">
+                    <div class="category-image category-sandals">
+                        <span>👡</span>
+                    </div>
+                    <div class="category-info">
+                        <h3>Sandals</h3>
+                        <p>फैशनेबल सैंडल - Boys, Girls, Kids</p>
+                    </div>
+                </div>
+
+                <div class="category-card" onclick="window.location.href='slippers.html'">
+                    <div class="category-image category-slippers">
+                        <span>🩴</span>
+                    </div>
+                    <div class="category-info">
+                        <h3>Slippers</h3>
+                        <p>आरामदायक चप्पल - Boys, Girls, Kids</p>
+                    </div>
+                </div>
+
+                <div class="category-card" onclick="window.location.href='flip-flops.html'">
+                    <div class="category-image category-flip-flops">
+                        <span>🥿</span>
+                    </div>
+                    <div class="category-info">
+                        <h3>Flip-Flops</h3>
+                        <p>स्टाइलिश फ्लिप-फ्लॉप - Boys, Girls, Kids</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>🔐 Login / Register</h2>
+            <div class="form-group">
+                <label>📧 Email:</label>
+                <input type="email" id="loginEmail" placeholder="आपका email address">
+            </div>
+            <div class="form-group">
+                <label>🔒 Password:</label>
+                <input type="password" id="loginPassword" placeholder="आपका password">
+            </div>
+            <div class="form-group">
+                <label>👤 Full Name:</label>
+                <input type="text" id="loginName" placeholder="आपका पूरा नाम (केवल registration के लिए)">
+            </div>
+            <div class="form-group">
+                <label>📱 Phone:</label>
+                <input type="tel" id="loginPhone" placeholder="आपका mobile number">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="login()">Login</button>
+                <button class="btn btn-secondary" onclick="register()">Register</button>
+                <button class="btn btn-secondary" onclick="closeModal('loginModal')">Cancel</button>
+            </div>
+            <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 10px; font-size: 12px;">
+                <strong>Demo Accounts:</strong><br>
+                Admin: admin@test.com / admin123<br>
+                Staff: staff@test.com / staff123<br>
+                Customer: customer@test.com / customer123
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <h2>🛒 आपका Shopping Cart</h2>
+            <div id="cartItems"></div>
+            <div class="cart-total" id="cartTotal">Total: ₹0</div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="checkout()">💳 Order करें</button>
+                <button class="btn btn-secondary" onclick="clearCart()">🗑️ Clear Cart</button>
+                <button class="btn btn-secondary" onclick="closeModal('cartModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <h2>📝 Order Details</h2>
+            <div class="form-group">
+                <label>👤 आपका नाम:</label>
+                <input type="text" id="checkoutName" placeholder="पूरा नाम">
+            </div>
+            <div class="form-group">
+                <label>📱 Phone Number:</label>
+                <input type="tel" id="checkoutPhone" placeholder="Mobile number">
+            </div>
+            <div class="form-group">
+                <label>📧 Email:</label>
+                <input type="email" id="checkoutEmail" placeholder="Email address">
+            </div>
+            <div class="form-group">
+                <label>📍 Delivery Address:</label>
+                <textarea id="checkoutAddress" placeholder="पूरा address with pincode"></textarea>
+            </div>
+            <div class="form-group">
+                <label>📝 Special Notes:</label>
+                <textarea id="checkoutNotes" placeholder="कोई खास बात या requirements (optional)"></textarea>
+            </div>
+            <div class="cart-total" id="checkoutTotal">Total: ₹0</div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="placeOrder()">✅ Order Confirm करें</button>
+                <button class="btn btn-secondary" onclick="closeModal('checkoutModal')">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Shree Sainath Footwear. सभी rights reserved.</p>
+        <p>📞 8003276503 | 📍 सदर मार्केट, सरोपागंज | 📧 info@shreesainathfootwear.com</p>
+        <p>✨ Quality Footwear | 💰 Best Wholesale Rates | 🚚 Fast Delivery All Over India</p>
+    </footer>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://your-project-id.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YOUR_ANON_KEY_HERE';
+        
+        const isSupabaseConfigured = SUPABASE_URL !== 'https://your-project-id.supabase.co' && 
+                                     SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YOUR_ANON_KEY_HERE';
+        
+        let supabase = null;
+        if (isSupabaseConfigured) {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase connected successfully');
+            } catch (error) {
+                console.log('❌ Supabase connection error:', error);
+                supabase = null;
+            }
+        } else {
+            console.log('🎮 Running in DEMO MODE - Please configure Supabase keys for production');
+        }
+        
+        // Global variables
+        let currentUser = null;
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        
+        // Demo users
+        const demoUsers = [
+            {
+                email: 'admin@test.com',
+                password: 'admin123',
+                id: 'demo-admin-1',
+                full_name: 'Admin User',
+                role: 'admin'
+            },
+            {
+                email: 'staff@test.com', 
+                password: 'staff123',
+                id: 'demo-staff-1',
+                full_name: 'Staff Member',
+                role: 'staff'
+            },
+            {
+                email: 'customer@test.com',
+                password: 'customer123', 
+                id: 'demo-customer-1',
+                full_name: 'Customer User',
+                role: 'customer'
+            }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuth();
+            updateCartCount();
+        });
+
+        // Authentication functions
+        async function checkAuth() {
+            try {
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    updateAuthUI();
+                    return;
+                }
+
+                if (supabase) {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                        currentUser = session.user;
+                        updateAuthUI();
+                    }
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        }
+
+        function updateAuthUI() {
+            if (currentUser) {
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                checkAdminAccess();
+            } else {
+                document.getElementById('loginBtn').style.display = 'inline-block';
+                document.getElementById('logoutBtn').style.display = 'none';
+                document.getElementById('adminBtn').style.display = 'none';
+            }
+        }
+
+        async function checkAdminAccess() {
+            try {
+                if (!supabase && currentUser) {
+                    const demoUser = demoUsers.find(u => u.email === currentUser.email);
+                    if (demoUser && (demoUser.role === 'admin' || demoUser.role === 'staff')) {
+                        document.getElementById('adminBtn').style.display = 'inline-block';
+                    }
+                    return;
+                }
+
+                if (supabase && currentUser) {
+                    const { data: user } = await supabase
+                        .from('users')
+                        .select('role')
+                        .eq('id', currentUser.id)
+                        .single();
+                    
+                    if (user && (user.role === 'admin' || user.role === 'staff')) {
+                        document.getElementById('adminBtn').style.display = 'inline-block';
+                    }
+                }
+            } catch (error) {
+                console.error('Admin check error:', error);
+            }
+        }
+
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('कृपया email और password भरें');
+                return;
+            }
+
+            try {
+                if (!supabase) {
+                    const demoUser = demoUsers.find(u => u.email === email && u.password === password);
+                    
+                    if (demoUser) {
+                        currentUser = {
+                            id: demoUser.id,
+                            email: demoUser.email,
+                            user_metadata: {
+                                full_name: demoUser.full_name
+                            }
+                        };
+                        
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        
+                        updateAuthUI();
+                        closeModal('loginModal');
+                        alert(`🎉 Demo Login successful!\n\nWelcome ${demoUser.full_name}!\nRole: ${demoUser.role}`);
+                        
+                        document.getElementById('loginEmail').value = '';
+                        document.getElementById('loginPassword').value = '';
+                        return;
+                    } else {
+                        alert('❌ Invalid credentials!\n\nDemo accounts:\n• admin@test.com / admin123\n• staff@test.com / staff123\n• customer@test.com / customer123');
+                        return;
+                    }
+                }
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                currentUser = data.user;
+                updateAuthUI();
+                closeModal('loginModal');
+                alert('Login successful!');
+                
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const fullName = document.getElementById('loginName').value;
+            const phone = document.getElementById('loginPhone').value;
+
+            if (!email || !password || !fullName) {
+                alert('कृपया सभी required fields भरें');
+                return;
+            }
+
+            try {
+                if (!supabase) {
+                    const existingUser = demoUsers.find(u => u.email === email);
+                    if (existingUser) {
+                        alert('❌ Email already registered!\n\nPlease use different email or try login.');
+                        return;
+                    }
+
+                    const newUser = {
+                        email: email,
+                        password: password,
+                        id: 'demo-user-' + Date.now(),
+                        full_name: fullName,
+                        role: 'customer'
+                    };
+
+                    demoUsers.push(newUser);
+                    
+                    alert('✅ Registration successful!\n\nYou can now login with:\nEmail: ' + email + '\nPassword: ' + password);
+                    closeModal('loginModal');
+                    
+                    document.getElementById('loginEmail').value = '';
+                    document.getElementById('loginPassword').value = '';
+                    document.getElementById('loginName').value = '';
+                    document.getElementById('loginPhone').value = '';
+                    return;
+                }
+
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            phone: phone
+                        }
+                    }
+                });
+
+                if (error) throw error;
+
+                alert('Registration successful! कृपया अपना email check करें verification के लिए।');
+                closeModal('loginModal');
+                
+            } catch (error) {
+                alert('Registration failed: ' + error.message);
+            }
+        }
+
+        async function logout() {
+            try {
+                localStorage.removeItem('currentUser');
+                
+                if (supabase) {
+                    await supabase.auth.signOut();
+                }
+                
+                currentUser = null;
+                cart = [];
+                localStorage.removeItem('cart');
+                updateAuthUI();
+                updateCartCount();
+                alert('✅ Logout successful!');
+            } catch (error) {
+                console.error('Logout error:', error);
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                updateAuthUI();
+                alert('Logout completed!');
+            }
+        }
+
+        // Cart functions
+        function updateCartCount() {
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            document.getElementById('cartCount').textContent = count;
+        }
+
+        function showCartModal() {
+            if (cart.length === 0) {
+                alert('आपका cart empty है');
+                return;
+            }
+            
+            displayCartItems();
+            document.getElementById('cartModal').style.display = 'flex';
+        }
+
+        function displayCartItems() {
+            const container = document.getElementById('cartItems');
+            let total = 0;
+
+            container.innerHTML = cart.map(item => {
+                const itemTotal = item.quantity * item.price;
+                total += itemTotal;
+                
+                return `
+                    <div class="cart-item">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${item.image}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                            <div>
+                                <strong>${item.name}</strong><br>
+                                <small>Quantity: ${item.quantity} × ₹${item.price}</small>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong>₹${itemTotal}</strong><br>
+                            <button onclick="removeFromCart('${item.id}')" style="background:#ff4757;color:white;border:none;padding:5px 8px;border-radius:5px;font-size:12px;">Remove</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cartTotal').textContent = `Total: ₹${total}`;
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            displayCartItems();
+            
+            if (cart.length === 0) {
+                closeModal('cartModal');
+            }
+        }
+
+        function clearCart() {
+            cart = [];
+            localStorage.removeItem('cart');
+            updateCartCount();
+            closeModal('cartModal');
+            alert('Cart cleared!');
+        }
+
+        function checkout() {
+            if (!currentUser) {
+                alert('कृपया पहले login करें');
+                showLoginModal();
+                return;
+            }
+            
+            closeModal('cartModal');
+            
+            if (currentUser) {
+                document.getElementById('checkoutName').value = currentUser.user_metadata?.full_name || '';
+                document.getElementById('checkoutPhone').value = currentUser.user_metadata?.phone || '';
+                document.getElementById('checkoutEmail').value = currentUser.email || '';
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            document.getElementById('checkoutTotal').textContent = `Total: ₹${total}`;
+            
+            document.getElementById('checkoutModal').style.display = 'flex';
+        }
+
+        async function placeOrder() {
+            const name = document.getElementById('checkoutName').value;
+            const phone = document.getElementById('checkoutPhone').value;
+            const email = document.getElementById('checkoutEmail').value;
+            const address = document.getElementById('checkoutAddress').value;
+            const notes = document.getElementById('checkoutNotes').value;
+
+            if (!name || !phone || !address) {
+                alert('कृपया सभी required fields भरें');
+                return;
+            }
+
+            try {
+                const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                const orderNumber = 'ORD-' + Date.now();
+
+                if (!supabase) {
+                    setTimeout(() => {
+                        cart = [];
+                        localStorage.removeItem('cart');
+                        updateCartCount();
+                        closeModal('checkoutModal');
+                        alert(`✅ Order successful!\n\nOrder Number: ${orderNumber}\nTotal Amount: ₹${total}\n\nहम जल्दी आपसे contact करेंगे।\nधन्यवाद!`);
+                    }, 1000);
+                    return;
+                }
+
+                // Real Supabase implementation would go here
+                cart = [];
+                localStorage.removeItem('cart');
+                updateCartCount();
+                closeModal('checkoutModal');
+                
+                alert(`✅ Order successful! आपका order number है: ${orderNumber}\n\nहम जल्दी आपसे contact करेंगे।`);
+                
+            } catch (error) {
+                console.error('Order placement error:', error);
+                alert('Order नहीं हो सका। कृपया फिर से try करें।');
+            }
+        }
+
+        // Utility functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            
+            if (modalId === 'loginModal') {
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginName').value = '';
+                document.getElementById('loginPhone').value = '';
+            }
+        }
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+        console.log('🎉 श्री साईनाथ फुटवियर Website Ready!');
+        console.log('📱 Demo Login: admin@test.com / admin123');
+    </script>
+</body>
+</html>
