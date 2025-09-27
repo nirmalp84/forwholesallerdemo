@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Shree Sainath Footwear</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.0/umd/index.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #48bb78, #68d391);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f56565, #fc8181);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ed8936, #f6ad55);
+        }
+
+        main {
+            margin-top: 80px;
+            min-height: calc(100vh - 160px);
+            padding: 20px 0;
+        }
+
+        .admin-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .admin-header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .admin-header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .admin-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .admin-tab {
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .admin-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .admin-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        .admin-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending { background: #ffeaa7; color: #fdcb6e; }
+        .status-confirmed { background: #74b9ff; color: #0984e3; }
+        .status-processing { background: #a29bfe; color: #6c5ce7; }
+        .status-shipped { background: #fd79a8; color: #e84393; }
+        .status-delivered { background: #00b894; color: #00a085; }
+        .status-cancelled { background: #fab1a0; color: #e17055; }
+        .status-active { background: #00b894; color: #00a085; }
+        .status-inactive { background: #fab1a0; color: #e17055; }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .recent-activity {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .low-stock {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .new-order {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .inventory-alert {
+            background: #ffe66d;
+            color: #333;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Staff specific styles */
+        .staff-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .staff-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .staff-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .admin-header h1 {
+                font-size: 28px;
+            }
+            
+            .admin-tabs {
+                justify-content: center;
+            }
+            
+            .admin-tab {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+            }
+
+            .admin-table {
+                font-size: 14px;
+            }
+
+            .admin-table th,
+            .admin-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">🦶 Shree Sainath Footwear - Admin</div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="window.location.href='index.html'">🏠 Home</button>
+                <button class="btn btn-secondary" onclick="showNotifications()">🔔 Notifications</button>
+                <button class="btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="admin-header">
+                <h1>🔧 Admin Dashboard</h1>
+                <p>श्री साईनाथ फुटवियर - Complete Business Management</p>
+                <p>Welcome back, <span id="adminName">Admin</span> | Today: <span id="currentDate"></span></p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="totalProducts">156</h3>
+                    <p>📦 Total Products</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(45deg, #f093fb, #f5576c);">
+                    <h3 id="totalOrders">342</h3>
+                    <p>📋 Total Orders</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+                    <h3 id="totalRevenue">₹1,25,400</h3>
+                    <p>💰 Monthly Revenue</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(45deg, #43e97b, #38f9d7);">
+                    <h3 id="totalStaff">5</h3>
+                    <p>👥 Total Staff</p>
+                </div>
+            </div>
+
+            <div class="admin-panel">
+                <div class="admin-tabs">
+                    <div class="admin-tab active" onclick="showAdminTab('dashboard', this)">
+                        <span>📊</span> Dashboard
+                    </div>
+                    <div class="admin-tab" onclick="showAdminTab('staff', this)">
+                        <span>👥</span> Staff Management
+                    </div>
+                    <div class="admin-tab" onclick="showAdminTab('products', this)">
+                        <span>📦</span> Products
+                    </div>
+                    <div class="admin-tab" onclick="showAdminTab('orders', this)">
+                        <span>📋</span> Orders
+                    </div>
+                    <div class="admin-tab" onclick="showAdminTab('inventory', this)">
+                        <span>📊</span> Inventory
+                    </div>
+                    <div class="admin-tab" onclick="showAdminTab('customers', this)">
+                        <span>👥</span> Customers
+                    </div>
+                    <div class="admin-tab" onclick="showAdminTab('analytics', this)">
+                        <span>📈</span> Analytics
+                    </div>
+                    <div class="admin-tab" onclick="showAdminTab('settings', this)">
+                        <span>⚙️</span> Settings
+                    </div>
+                </div>
+
+                <!-- Dashboard Section -->
+                <div id="adminDashboard" class="admin-section active">
+                    <div class="quick-actions">
+                        <button class="btn btn-success" onclick="showAddProductModal()">
+                            ➕ Add New Product
+                        </button>
+                        <button class="btn btn-warning" onclick="showBulkUploadModal()">
+                            📤 Bulk Upload
+                        </button>
+                        <button class="btn" onclick="generateReport()">
+                            📊 Generate Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            📥 Export Data
+                        </button>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3 style="margin-bottom: 20px;">📋 Recent Activity</h3>
+                        <div class="activity-item">
+                            <div class="activity-icon new-order">🛒</div>
+                            <div>
+                                <strong>New Order #ORD-1234567890</strong><br>
+                                <small>राहुल शर्मा ने ₹1,500 का order किया - 2 minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon low-stock">⚠️</div>
+                            <div>
+                                <strong>Low Stock Alert</strong><br>
+                                <small>Sports Shoes - Boys में केवल 5 pieces बचे हैं - 15 minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon inventory-alert">📦</div>
+                            <div>
+                                <strong>Product Added</strong><br>
+                                <small>New Beach Sandals - Girls added to inventory - 1 hour ago</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon new-order">✅</div>
+                            <div>
+                                <strong>Order Delivered</strong><br>
+                                <small>Order #ORD-1234567885 successfully delivered - 2 hours ago</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 20px;">📈 Sales Trend (Last 7 Days)</h3>
+                        <div style="display: flex; align-items: end; gap: 10px; height: 200px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                            <div style="background: #667eea; width: 40px; height: 120px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold;">Mon</div>
+                            <div style="background: #764ba2; width: 40px; height: 150px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold;">Tue</div>
+                            <div style="background: #f093fb; width: 40px; height: 100px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold;">Wed</div>
+                            <div style="background: #4facfe; width: 40px; height: 180px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold;">Thu</div>
+                            <div style="background: #43e97b; width: 40px; height: 140px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold;">Fri</div>
+                            <div style="background: #feca57; width: 40px; height: 170px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold;">Sat</div>
+                            <div style="background: #ff6b6b; width: 40px; height: 190px; border-radius: 5px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold;">Sun</div>
+                        </div>
+                        <p style="text-align: center; margin-top: 15px; color: #666;">
+                            📊 Highest sales on Sunday (₹25,600) | Lowest on Wednesday (₹12,800)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Staff Management Section -->
+                <div id="adminStaff" class="admin-section">
+                    <div class="quick-actions">
+                        <button class="btn btn-success" onclick="showAddStaffModal()">
+                            👤 Add New Staff
+                        </button>
+                        <button class="btn" onclick="filterStaff('active')">
+                            ✅ Active Staff
+                        </button>
+                        <button class="btn btn-warning" onclick="filterStaff('inactive')">
+                            ❌ Inactive Staff
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportStaff()">
+                            📥 Export Staff Data
+                        </button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="staffSearch" placeholder="🔍 Search staff by name, phone, or role..." onkeyup="searchStaff()">
+                    </div>
+
+                    <div id="staffTable">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Salary</th>
+                                    <th>Join Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staffTableBody">
+                                <!-- Staff data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Products Section -->
+                <div id="adminProducts" class="admin-section">
+                    <div class="quick-actions">
+                        <button class="btn btn-success" onclick="showAddProductModal()">
+                            ➕ Add Product
+                        </button>
+                        <button class="btn btn-warning" onclick="showBulkActions()">
+                            📦 Bulk Actions
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportProducts()">
+                            📥 Export Products
+                        </button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="productSearch" placeholder="🔍 Search products by name, SKU, or category..." onkeyup="searchProducts()">
+                    </div>
+
+                    <div id="productsTable">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Wholesale</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Orders Section -->
+                <div id="adminOrders" class="admin-section">
+                    <div class="quick-actions">
+                        <button class="btn btn-success" onclick="filterOrders('all')">All Orders</button>
+                        <button class="btn btn-warning" onclick="filterOrders('pending')">Pending</button>
+                        <button class="btn" onclick="filterOrders('confirmed')">Confirmed</button>
+                        <button class="btn btn-secondary" onclick="exportOrders()">📥 Export</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="orderSearch" placeholder="🔍 Search orders by number, customer name, or phone..." onkeyup="searchOrders()">
+                    </div>
+
+                    <div id="ordersTable">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Phone</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Orders will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Inventory Section -->
+                <div id="adminInventory" class="admin-section">
+                    <div class="quick-actions">
+                        <button class="btn btn-danger" onclick="filterInventory('low')">⚠️ Low Stock</button>
+                        <button class="btn btn-warning" onclick="filterInventory('out')">❌ Out of Stock</button>
+                        <button class="btn btn-success" onclick="filterInventory('good')">✅ Good Stock</button>
+                        <button class="btn btn-secondary" onclick="updateAllStock()">🔄 Update Stock</button>
+                    </div>
+
+                    <div id="inventoryStats" class="stats-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card" style="background: linear-gradient(45deg, #ff6b6b, #feca57);">
+                            <h3>8</h3>
+                            <p>❌ Out of Stock</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(45deg, #feca57, #ff9ff3);">
+                            <h3>12</h3>
+                            <p>⚠️ Low Stock</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(45deg, #43e97b, #38f9d7);">
+                            <h3>136</h3>
+                            <p>✅ Good Stock</p>
+                        </div>
+                    </div>
+
+                    <div id="inventoryTable">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Current Stock</th>
+                                    <th>Min. Required</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <!-- Inventory will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Customers Section -->
+                <div id="adminCustomers" class="admin-section">
+                    <div class="quick-actions">
+                        <button class="btn btn-success" onclick="showAddCustomerModal()">👤 Add Customer</button>
+                        <button class="btn" onclick="filterCustomers('active')">Active Customers</button>
+                        <button class="btn btn-secondary" onclick="exportCustomers()">📥 Export</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="customerSearch" placeholder="🔍 Search customers by name, email, or phone..." onkeyup="searchCustomers()">
+                    </div>
+
+                    <div id="customersTable">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Orders</th>
+                                    <th>Total Spent</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTableBody">
+                                <!-- Customers will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div id="adminAnalytics" class="admin-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>₹3,25,600</h3>
+                            <p>💰 This Month Revenue</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(45deg, #f093fb, #f5576c);">
+                            <h3>542</h3>
+                            <p>📋 Orders This Month</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+                            <h3>₹601</h3>
+                            <p>📊 Average Order Value</p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(45deg, #43e97b, #38f9d7);">
+                            <h3>23.5%</h3>
+                            <p>📈 Growth Rate</p>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>🎯 Top Selling Categories</h3>
+                        <div style="display: flex; justify-content: space-around; align-items: end; height: 250px; padding: 20px;">
+                            <div style="text-align: center;">
+                                <div style="background: #667eea; width: 80px; height: 180px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">👞</div>
+                                <strong>Shoes</strong><br>
+                                <small>42% Sales</small>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="background: #f093fb; width: 80px; height: 130px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">👡</div>
+                                <strong>Sandals</strong><br>
+                                <small>28% Sales</small>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="background: #4facfe; width: 80px; height: 90px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">🩴</div>
+                                <strong>Slippers</strong><br>
+                                <small>20% Sales</small>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="background: #43e97b; width: 80px; height: 70px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">🥿</div>
+                                <strong>Flip-Flops</strong><br>
+                                <small>10% Sales</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3>📊 Business Insights</h3>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #667eea;">📈</div>
+                            <div>
+                                <strong>Sales Trend</strong><br>
+                                <small>23.5% increase compared to last month. Keep up the great work!</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #f093fb;">👥</div>
+                            <div>
+                                <strong>Customer Growth</strong><br>
+                                <small>45 new customers acquired this month. Customer retention: 78%</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #4facfe;">⭐</div>
+                            <div>
+                                <strong>Top Performing Product</strong><br>
+                                <small>Sports Shoes - Boys generating highest revenue this month</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="adminSettings" class="admin-section">
+                    <div class="recent-activity">
+                        <h3>⚙️ Business Settings</h3>
+                        
+                        <div class="form-group">
+                            <label>🏪 Business Name:</label>
+                            <input type="text" value="Shree Sainath Footwear" readonly style="background: #f8f9fa;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📞 Contact Number:</label>
+                            <input type="tel" id="businessPhone" value="8003276503">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📍 Business Address:</label>
+                            <textarea id="businessAddress" rows="3">सदर मार्केट, सरूपगंज</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📧 Business Email:</label>
+                            <input type="email" id="businessEmail" value="info@shreesainathfootwear.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>💰 Default Wholesale Margin (%):</label>
+                            <input type="number" id="wholesaleMargin" value="25" min="0" max="50">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📦 Low Stock Alert Level:</label>
+                            <input type="number" id="lowStockLevel" value="10" min="1" max="50">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>🚚 Delivery Charges (₹):</label>
+                            <input type="number" id="deliveryCharges" value="50" min="0" max="200">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>🔔 Notification Settings:</label>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" checked> New Orders
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" checked> Low Stock
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" checked> Order Status Changes
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox"> Daily Reports
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                            <button class="btn btn-success" onclick="saveSettings()">💾 Save Settings</button>
+                            <button class="btn btn-warning" onclick="resetSettings()">🔄 Reset to Default</button>
+                            <button class="btn btn-danger" onclick="showBackupModal()">💾 Backup Data</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <h2>➕ Add New Product</h2>
+            <div class="form-group">
+                <label>📂 Category:</label>
+                <select id="productCategory">
+                    <option value="">Select Category</option>
+                    <option value="shoes">👞 Shoes</option>
+                    <option value="sandals">👡 Sandals</option>
+                    <option value="slippers">🩴 Slippers</option>
+                    <option value="flip-flops">🥿 Flip-Flops</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>👤 Subcategory:</label>
+                <select id="productSubcategory">
+                    <option value="">Select Subcategory</option>
+                    <option value="boys">👦 Boys</option>
+                    <option value="girls">👧 Girls</option>
+                    <option value="kids">🧒 Kids</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>🏷️ Product Name:</label>
+                <input type="text" id="productName" placeholder="Product का नाम">
+            </div>
+            <div class="form-group">
+                <label>📝 Description:</label>
+                <textarea id="productDescription" placeholder="Product की विस्तृत जानकारी"></textarea>
+            </div>
+            <div class="form-group">
+                <label>💰 Retail Price (₹):</label>
+                <input type="number" id="productPrice" placeholder="Retail price">
+            </div>
+            <div class="form-group">
+                <label>🏪 Wholesale Price (₹):</label>
+                <input type="number" id="productWholesalePrice" placeholder="Wholesale price">
+            </div>
+            <div class="form-group">
+                <label>🔢 SKU/Product Code:</label>
+                <input type="text" id="productSku" placeholder="Unique product code">
+            </div>
+            <div class="form-group">
+                <label>📦 Stock Quantity:</label>
+                <input type="number" id="productQuantity" placeholder="Available quantity">
+            </div>
+            <div class="form-group">
+                <label>📏 Available Sizes:</label>
+                <input type="text" id="productSizes" placeholder="6,7,8,9,10 (comma separated)">
+            </div>
+            <div class="form-group">
+                <label>🎨 Available Colors:</label>
+                <input type="text" id="productColors" placeholder="Black,Brown,White (comma separated)">
+            </div>
+            <div class="form-group">
+                <label>📸 Product Images:</label>
+                <input type="url" id="productImage1" placeholder="Image URL 1">
+                <input type="url" id="productImage2" placeholder="Image URL 2 (optional)" style="margin-top: 5px;">
+                <input type="url" id="productImage3" placeholder="Image URL 3 (optional)" style="margin-top: 5px;">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-success" onclick="addProduct()">✅ Add Product</button>
+                <button class="btn btn-secondary" onclick="closeModal('addProductModal')">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Staff Modal -->
+    <div id="addStaffModal" class="modal">
+        <div class="modal-content">
+            <h2>👤 Add New Staff Member</h2>
+            <div class="form-group">
+                <label>👤 Full Name:</label>
+                <input type="text" id="staffName" placeholder="Staff का पूरा नाम">
+            </div>
+            <div class="form-group">
+                <label>📞 Phone Number:</label>
+                <input type="tel" id="staffPhone" placeholder="10-digit phone number">
+            </div>
+            <div class="form-group">
+                <label>📧 Email:</label>
+                <input type="email" id="staffEmail" placeholder="email@example.com">
+            </div>
+            <div class="form-group">
+                <label>🏠 Address:</label>
+                <textarea id="staffAddress" placeholder="Staff का पूरा पता" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>💼 Role/Position:</label>
+                <select id="staffRole">
+                    <option value="">Select Role</option>
+                    <option value="salesperson">👨‍💼 Sales Person</option>
+                    <option value="cashier">💰 Cashier</option>
+                    <option value="inventory">📦 Inventory Manager</option>
+                    <option value="assistant">🤝 Assistant</option>
+                    <option value="delivery">🚚 Delivery Boy</option>
+                    <option value="admin">👑 Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>💰 Monthly Salary (₹):</label>
+                <input type="number" id="staffSalary" placeholder="Monthly salary amount">
+            </div>
+            <div class="form-group">
+                <label>📅 Joining Date:</label>
+                <input type="date" id="staffJoinDate">
+            </div>
+            <div class="form-group">
+                <label>🆔 Aadhar Number:</label>
+                <input type="text" id="staffAadhar" placeholder="12-digit Aadhar number">
+            </div>
+            <div class="form-group">
+                <label>📱 Emergency Contact:</label>
+                <input type="tel" id="staffEmergencyContact" placeholder="Emergency contact number">
+            </div>
+            <div class="form-group">
+                <label>📸 Photo URL:</label>
+                <input type="url" id="staffPhoto" placeholder="Profile photo URL (optional)">
+            </div>
+            <div class="form-group">
+                <label>📝 Additional Notes:</label>
+                <textarea id="staffNotes" placeholder="कोई अतिरिक्त जानकारी" rows="2"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-success" onclick="addStaff()">✅ Add Staff</button>
+                <button class="btn btn-secondary" onclick="closeModal('addStaffModal')">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Staff Modal -->
+    <div id="editStaffModal" class="modal">
+        <div class="modal-content">
+            <h2>✏️ Edit Staff Member</h2>
+            <div class="form-group">
+                <label>👤 Full Name:</label>
+                <input type="text" id="editStaffName">
+            </div>
+            <div class="form-group">
+                <label>📞 Phone Number:</label>
+                <input type="tel" id="editStaffPhone">
+            </div>
+            <div class="form-group">
+                <label>📧 Email:</label>
+                <input type="email" id="editStaffEmail">
+            </div>
+            <div class="form-group">
+                <label>💼 Role/Position:</label>
+                <select id="editStaffRole">
+                    <option value="salesperson">👨‍💼 Sales Person</option>
+                    <option value="cashier">💰 Cashier</option>
+                    <option value="inventory">📦 Inventory Manager</option>
+                    <option value="assistant">🤝 Assistant</option>
+                    <option value="delivery">🚚 Delivery Boy</option>
+                    <option value="admin">👑 Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>💰 Monthly Salary (₹):</label>
+                <input type="number" id="editStaffSalary">
+            </div>
+            <div class="form-group">
+                <label>📊 Status:</label>
+                <select id="editStaffStatus">
+                    <option value="active">✅ Active</option>
+                    <option value="inactive">❌ Inactive</option>
+                    <option value="on-leave">🏖️ On Leave</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-success" onclick="updateStaff()">💾 Update Staff</button>
+                <button class="btn btn-secondary" onclick="closeModal('editStaffModal')">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-content">
+            <h2>🔔 Notifications</h2>
+            <div class="recent-activity">
+                <div class="activity-item">
+                    <div class="activity-icon new-order">🛒</div>
+                    <div>
+                        <strong>New Order Alert</strong><br>
+                        <small>Order #ORD-1640995200000 received from राहुल शर्मा - ₹1,500</small>
+                        <br><small style="color: #666;">2 minutes ago</small>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon low-stock">⚠️</div>
+                    <div>
+                        <strong>Low Stock Warning</strong><br>
+                        <small>Sports Shoes - Boys: Only 5 pieces remaining</small>
+                        <br><small style="color: #666;">15 minutes ago</small>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon inventory-alert">📦</div>
+                    <div>
+                        <strong>Inventory Update</strong><br>
+                        <small>Beach Sandals - Girls stock updated to 35 pieces</small>
+                        <br><small style="color: #666;">1 hour ago</small>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon new-order">✅</div>
+                    <div>
+                        <strong>Order Completed</strong><br>
+                        <small>Order #ORD-1640995180000 marked as delivered</small>
+                        <br><small style="color: #666;">2 hours ago</small>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeModal('notificationsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://your-project-id.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YOUR_ANON_KEY_HERE';
+        
+        const isSupabaseConfigured = SUPABASE_URL !== 'https://your-project-id.supabase.co' && 
+                                     SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YOUR_ANON_KEY_HERE';
+        
+        let supabase = null;
+        if (isSupabaseConfigured) {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } catch (error) {
+                console.log('❌ Supabase connection error:', error);
+                supabase = null;
+            }
+        } else {
+            console.log('🎮 Running in DEMO MODE - Admin Panel');
+        }
+        
+        // Global variables
+        let currentUser = null;
+        let currentEditStaffId = null;
+        
+        // Demo users - Enhanced with role-based access
+        const demoUsers = [
+            {
+                email: 'admin@test.com',
+                password: 'admin123',
+                id: 'demo-admin-1',
+                full_name: 'Admin User',
+                role: 'admin'
+            },
+            {
+                email: 'staff@test.com', 
+                password: 'staff123',
+                id: 'demo-staff-1',
+                full_name: 'Staff Member',
+                role: 'staff'
+            }
+        ];
+
+        // Demo staff data
+        const demoStaff = [
+            {
+                id: 'staff1',
+                name: 'राजेश कुमार',
+                phone: '9876543210',
+                email: 'rajesh@sainath.com',
+                address: 'सरूपगंज, सीकर',
+                role: 'salesperson',
+                salary: 15000,
+                join_date: '2023-01-15',
+                aadhar: '1234-5678-9012',
+                emergency_contact: '9876543211',
+                photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+                status: 'active',
+                notes: 'Experienced sales person'
+            },
+            {
+                id: 'staff2',
+                name: 'प्रिया शर्मा',
+                phone: '9876543212',
+                email: 'priya@sainath.com',
+                address: 'सदर बाजार, सीकर',
+                role: 'cashier',
+                salary: 12000,
+                join_date: '2023-03-20',
+                aadhar: '2345-6789-0123',
+                emergency_contact: '9876543213',
+                photo: 'https://images.unsplash.com/photo-1494790108755-2616b612b494?w=100&h=100&fit=crop&crop=face',
+                status: 'active',
+                notes: 'Excellent with customers'
+            },
+            {
+                id: 'staff3',
+                name: 'अमित पटेल',
+                phone: '9876543214',
+                email: 'amit@sainath.com',
+                address: 'नया बास, सीकर',
+                role: 'inventory',
+                salary: 18000,
+                join_date: '2022-11-10',
+                aadhar: '3456-7890-1234',
+                emergency_contact: '9876543215',
+                photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+                status: 'active',
+                notes: 'Good with stock management'
+            },
+            {
+                id: 'staff4',
+                name: 'सुनीता देवी',
+                phone: '9876543216',
+                email: 'sunita@sainath.com',
+                address: 'गांधी चौक, सीकर',
+                role: 'assistant',
+                salary: 10000,
+                join_date: '2024-01-05',
+                aadhar: '4567-8901-2345',
+                emergency_contact: '9876543217',
+                photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
+                status: 'on-leave',
+                notes: 'On maternity leave'
+            },
+            {
+                id: 'staff5',
+                name: 'विकास यादव',
+                phone: '9876543218',
+                email: 'vikas@sainath.com',
+                address: 'बस स्टैंड, सीकर',
+                role: 'delivery',
+                salary: 8000,
+                join_date: '2023-08-15',
+                aadhar: '5678-9012-3456',
+                emergency_contact: '9876543219',
+                photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
+                status: 'inactive',
+                notes: 'Left for better opportunity'
+            }
+        ];
+
+        // Demo data for admin panel
+        const demoProducts = [
+            {
+                id: 'prod1',
+                name: 'Nike Air Sports Shoes - Boys',
+                category: 'Shoes',
+                subcategory: 'Boys',
+                price: 1299,
+                wholesale_price: 999,
+                stock: 45,
+                image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
+                status: 'Active',
+                sku: 'SHOE-BOY-001'
+            },
+            {
+                id: 'prod2',
+                name: 'Fashion Sandals - Girls',
+                category: 'Sandals',
+                subcategory: 'Girls',
+                price: 899,
+                wholesale_price: 699,
+                stock: 8,
+                image: 'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=100&h=100&fit=crop',
+                status: 'Active',
+                sku: 'SAND-GIRL-001'
+            },
+            {
+                id: 'prod3',
+                name: 'Comfort Slippers - Kids',
+                category: 'Slippers',
+                subcategory: 'Kids',
+                price: 299,
+                wholesale_price: 199,
+                stock: 0,
+                image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop',
+                status: 'Out of Stock',
+                sku: 'SLIP-KID-001'
+            }
+        ];
+
+        const demoOrders = [
+            {
+                id: 'ord1',
+                order_number: 'ORD-1640995200000',
+                customer_name: 'राहुल शर्मा',
+                customer_phone: '9876543210',
+                amount: 1500,
+                status: 'pending',
+                date: new Date().toISOString()
+            },
+            {
+                id: 'ord2',
+                order_number: 'ORD-1640995180000',
+                customer_name: 'प्रिया पटेल',
+                customer_phone: '9876543211',
+                amount: 899,
+                status: 'delivered',
+                date: new Date(Date.now() - 86400000).toISOString()
+            },
+            {
+                id: 'ord3',
+                order_number: 'ORD-1640995160000',
+                customer_name: 'अमित कुमार',
+                customer_phone: '9876543212',
+                amount: 2200,
+                status: 'confirmed',
+                date: new Date(Date.now() - 172800000).toISOString()
+            }
+        ];
+
+        const demoCustomers = [
+            {
+                id: 'cust1',
+                name: 'राहुल शर्मा',
+                email: 'rahul@example.com',
+                phone: '9876543210',
+                orders: 5,
+                total_spent: 7500,
+                joined: '2024-01-15'
+            },
+            {
+                id: 'cust2',
+                name: 'प्रिया पटेल',
+                email: 'priya@example.com',
+                phone: '9876543211',
+                orders: 3,
+                total_spent: 4200,
+                joined: '2024-02-20'
+            }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuth();
+            initializeAdmin();
+            loadAdminData();
+        });
+
+        async function checkAuth() {
+            try {
+                // Check if we're coming from a direct admin login
+                const urlParams = new URLSearchParams(window.location.search);
+                const directLogin = urlParams.get('direct');
+                
+                if (directLogin === 'admin') {
+                    // Simulate admin login for direct access
+                    const adminUser = demoUsers.find(u => u.role === 'admin');
+                    if (adminUser) {
+                        currentUser = adminUser;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        document.getElementById('adminName').textContent = adminUser.full_name;
+                        return;
+                    }
+                }
+
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    const demoUser = demoUsers.find(u => u.email === currentUser.email);
+                    if (!demoUser || (demoUser.role !== 'admin' && demoUser.role !== 'staff')) {
+                        alert('❌ Access Denied! Admin access required.');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    document.getElementById('adminName').textContent = demoUser.full_name;
+                } else {
+                    alert('❌ Please login as admin first!');
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                window.location.href = 'index.html';
+            }
+        }
+
+        function initializeAdmin() {
+            // Set current date
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('hi-IN');
+            
+            // Update stats with demo data
+            document.getElementById('totalProducts').textContent = demoProducts.length;
+            document.getElementById('totalOrders').textContent = demoOrders.length;
+            document.getElementById('totalStaff').textContent = demoStaff.length;
+            
+            // Set today's date as default for staff join date
+            document.getElementById('staffJoinDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        function loadAdminData() {
+            loadProductsData();
+            loadOrdersData();
+            loadInventoryData();
+            loadCustomersData();
+            loadStaffData();
+        }
+
+        // Staff Management Functions
+        function loadStaffData() {
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = demoStaff.map(staff => {
+                const roleEmojis = {
+                    'salesperson': '👨‍💼',
+                    'cashier': '💰',
+                    'inventory': '📦',
+                    'assistant': '🤝',
+                    'delivery': '🚚',
+                    'admin': '👑'
+                };
+                
+                const statusColors = {
+                    'active': '#00b894',
+                    'inactive': '#fab1a0',
+                    'on-leave': '#fdcb6e'
+                };
+
+                return `
+                    <tr style="${staff.status === 'inactive' ? 'opacity: 0.6;' : ''}">
+                        <td>
+                            <div class="staff-avatar" style="background-image: url('${staff.photo}'); background-size: cover;">
+                                ${!staff.photo ? staff.name.charAt(0) : ''}
+                            </div>
+                        </td>
+                        <td>
+                            <strong>${staff.name}</strong><br>
+                            <small>ID: ${staff.id}</small>
+                        </td>
+                        <td>
+                            <span style="display: flex; align-items: center; gap: 5px;">
+                                ${roleEmojis[staff.role] || '👤'} 
+                                ${staff.role.charAt(0).toUpperCase() + staff.role.slice(1).replace('-', ' ')}
+                            </span>
+                        </td>
+                        <td>${staff.phone}</td>
+                        <td>${staff.email}</td>
+                        <td>₹${staff.salary.toLocaleString()}</td>
+                        <td>${new Date(staff.join_date).toLocaleDateString('hi-IN')}</td>
+                        <td>
+                            <span class="status-badge" style="background: ${statusColors[staff.status]}; color: white;">
+                                ${staff.status === 'active' ? '✅ Active' : staff.status === 'inactive' ? '❌ Inactive' : '🏖️ On Leave'}
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="editStaff('${staff.id}')" style="background:#667eea;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">✏️ Edit</button>
+                            <button onclick="viewStaff('${staff.id}')" style="background:#43e97b;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">👁️ View</button>
+                            <button onclick="deleteStaff('${staff.id}')" style="background:#ff4757;color:white;border:none;padding:5px 10px;border-radius:5px;">🗑️ Remove</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showAddStaffModal() {
+            document.getElementById('addStaffModal').style.display = 'flex';
+        }
+
+        function addStaff() {
+            const staffData = {
+                name: document.getElementById('staffName').value,
+                phone: document.getElementById('staffPhone').value,
+                email: document.getElementById('staffEmail').value,
+                address: document.getElementById('staffAddress').value,
+                role: document.getElementById('staffRole').value,
+                salary: parseFloat(document.getElementById('staffSalary').value),
+                join_date: document.getElementById('staffJoinDate').value,
+                aadhar: document.getElementById('staffAadhar').value,
+                emergency_contact: document.getElementById('staffEmergencyContact').value,
+                photo: document.getElementById('staffPhoto').value,
+                notes: document.getElementById('staffNotes').value
+            };
+
+            // Validation
+            if (!staffData.name || !staffData.phone || !staffData.role || !staffData.salary) {
+                alert('कृपया सभी required fields भरें (Name, Phone, Role, Salary)');
+                return;
+            }
+
+            if (staffData.phone.length !== 10) {
+                alert('Phone number 10 digits का होना चाहिए');
+                return;
+            }
+
+            if (staffData.aadhar && staffData.aadhar.replace(/\D/g, '').length !== 12) {
+                alert('Aadhar number 12 digits का होना चाहिए');
+                return;
+            }
+
+            // Add to demo data
+            const newStaff = {
+                id: 'staff' + (demoStaff.length + 1),
+                ...staffData,
+                status: 'active'
+            };
+            
+            demoStaff.push(newStaff);
+            
+            alert('✅ Staff member successfully added!');
+            closeModal('addStaffModal');
+            loadStaffData();
+            
+            // Clear form
+            document.getElementById('addStaffModal').querySelectorAll('input, select, textarea').forEach(field => {
+                field.value = '';
+            });
+            
+            // Reset join date to today
+            document.getElementById('staffJoinDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        function editStaff(staffId) {
+            const staff = demoStaff.find(s => s.id === staffId);
+            if (!staff) return;
+
+            currentEditStaffId = staffId;
+            
+            // Populate edit form
+            document.getElementById('editStaffName').value = staff.name;
+            document.getElementById('editStaffPhone').value = staff.phone;
+            document.getElementById('editStaffEmail').value = staff.email;
+            document.getElementById('editStaffRole').value = staff.role;
+            document.getElementById('editStaffSalary').value = staff.salary;
+            document.getElementById('editStaffStatus').value = staff.status;
+            
+            document.getElementById('editStaffModal').style.display = 'flex';
+        }
+
+        function updateStaff() {
+            if (!currentEditStaffId) return;
+
+            const staffIndex = demoStaff.findIndex(s => s.id === currentEditStaffId);
+            if (staffIndex === -1) return;
+
+            // Update staff data
+            demoStaff[staffIndex] = {
+                ...demoStaff[staffIndex],
+                name: document.getElementById('editStaffName').value,
+                phone: document.getElementById('editStaffPhone').value,
+                email: document.getElementById('editStaffEmail').value,
+                role: document.getElementById('editStaffRole').value,
+                salary: parseFloat(document.getElementById('editStaffSalary').value),
+                status: document.getElementById('editStaffStatus').value
+            };
+
+            alert('✅ Staff information updated successfully!');
+            closeModal('editStaffModal');
+            loadStaffData();
+            currentEditStaffId = null;
+        }
+
+        function viewStaff(staffId) {
+            const staff = demoStaff.find(s => s.id === staffId);
+            if (!staff) return;
+
+            alert(`👤 Staff Details:\n\nName: ${staff.name}\nPhone: ${staff.phone}\nEmail: ${staff.email}\nRole: ${staff.role}\nSalary: ₹${staff.salary}\nJoin Date: ${new Date(staff.join_date).toLocaleDateString('hi-IN')}\nStatus: ${staff.status}\nAddress: ${staff.address}\nAadhar: ${staff.aadhar}\nEmergency Contact: ${staff.emergency_contact}\nNotes: ${staff.notes || 'No additional notes'}`);
+        }
+
+        function deleteStaff(staffId) {
+            const staff = demoStaff.find(s => s.id === staffId);
+            if (!staff) return;
+
+            if (confirm(`Are you sure you want to remove ${staff.name} from staff?`)) {
+                const staffIndex = demoStaff.findIndex(s => s.id === staffId);
+                demoStaff.splice(staffIndex, 1);
+                
+                alert(`✅ ${staff.name} has been removed from staff!`);
+                loadStaffData();
+                
+                // Update total staff count
+                document.getElementById('totalStaff').textContent = demoStaff.length;
+            }
+        }
+
+        function searchStaff() {
+            const query = document.getElementById('staffSearch').value.toLowerCase();
+            const filteredStaff = demoStaff.filter(staff => 
+                staff.name.toLowerCase().includes(query) ||
+                staff.phone.includes(query) ||
+                staff.email.toLowerCase().includes(query) ||
+                staff.role.toLowerCase().includes(query)
+            );
+            
+            // Update table with filtered results
+            const tbody = document.getElementById('staffTableBody');
+            if (query.trim() === '') {
+                loadStaffData();
+                return;
+            }
+            
+            tbody.innerHTML = filteredStaff.map(staff => {
+                // Same rendering logic as loadStaffData but with filtered data
+                const roleEmojis = {
+                    'salesperson': '👨‍💼',
+                    'cashier': '💰',
+                    'inventory': '📦',
+                    'assistant': '🤝',
+                    'delivery': '🚚',
+                    'admin': '👑'
+                };
+                
+                const statusColors = {
+                    'active': '#00b894',
+                    'inactive': '#fab1a0',
+                    'on-leave': '#fdcb6e'
+                };
+
+                return `
+                    <tr style="${staff.status === 'inactive' ? 'opacity: 0.6;' : ''}">
+                        <td>
+                            <div class="staff-avatar" style="background-image: url('${staff.photo}'); background-size: cover;">
+                                ${!staff.photo ? staff.name.charAt(0) : ''}
+                            </div>
+                        </td>
+                        <td>
+                            <strong>${staff.name}</strong><br>
+                            <small>ID: ${staff.id}</small>
+                        </td>
+                        <td>
+                            <span style="display: flex; align-items: center; gap: 5px;">
+                                ${roleEmojis[staff.role] || '👤'} 
+                                ${staff.role.charAt(0).toUpperCase() + staff.role.slice(1).replace('-', ' ')}
+                            </span>
+                        </td>
+                        <td>${staff.phone}</td>
+                        <td>${staff.email}</td>
+                        <td>₹${staff.salary.toLocaleString()}</td>
+                        <td>${new Date(staff.join_date).toLocaleDateString('hi-IN')}</td>
+                        <td>
+                            <span class="status-badge" style="background: ${statusColors[staff.status]}; color: white;">
+                                ${staff.status === 'active' ? '✅ Active' : staff.status === 'inactive' ? '❌ Inactive' : '🏖️ On Leave'}
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="editStaff('${staff.id}')" style="background:#667eea;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">✏️ Edit</button>
+                            <button onclick="viewStaff('${staff.id}')" style="background:#43e97b;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">👁️ View</button>
+                            <button onclick="deleteStaff('${staff.id}')" style="background:#ff4757;color:white;border:none;padding:5px 10px;border-radius:5px;">🗑️ Remove</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterStaff(status) {
+            let filteredStaff = [];
+            
+            if (status === 'active') {
+                filteredStaff = demoStaff.filter(staff => staff.status === 'active');
+            } else if (status === 'inactive') {
+                filteredStaff = demoStaff.filter(staff => staff.status === 'inactive');
+            } else {
+                filteredStaff = demoStaff;
+            }
+            
+            // Update table with filtered results
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = filteredStaff.map(staff => {
+                const roleEmojis = {
+                    'salesperson': '👨‍💼',
+                    'cashier': '💰',
+                    'inventory': '📦',
+                    'assistant': '🤝',
+                    'delivery': '🚚',
+                    'admin': '👑'
+                };
+                
+                const statusColors = {
+                    'active': '#00b894',
+                    'inactive': '#fab1a0',
+                    'on-leave': '#fdcb6e'
+                };
+
+                return `
+                    <tr style="${staff.status === 'inactive' ? 'opacity: 0.6;' : ''}">
+                        <td>
+                            <div class="staff-avatar" style="background-image: url('${staff.photo}'); background-size: cover;">
+                                ${!staff.photo ? staff.name.charAt(0) : ''}
+                            </div>
+                        </td>
+                        <td>
+                            <strong>${staff.name}</strong><br>
+                            <small>ID: ${staff.id}</small>
+                        </td>
+                        <td>
+                            <span style="display: flex; align-items: center; gap: 5px;">
+                                ${roleEmojis[staff.role] || '👤'} 
+                                ${staff.role.charAt(0).toUpperCase() + staff.role.slice(1).replace('-', ' ')}
+                            </span>
+                        </td>
+                        <td>${staff.phone}</td>
+                        <td>${staff.email}</td>
+                        <td>₹${staff.salary.toLocaleString()}</td>
+                        <td>${new Date(staff.join_date).toLocaleDateString('hi-IN')}</td>
+                        <td>
+                            <span class="status-badge" style="background: ${statusColors[staff.status]}; color: white;">
+                                ${staff.status === 'active' ? '✅ Active' : staff.status === 'inactive' ? '❌ Inactive' : '🏖️ On Leave'}
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="editStaff('${staff.id}')" style="background:#667eea;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">✏️ Edit</button>
+                            <button onclick="viewStaff('${staff.id}')" style="background:#43e97b;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">👁️ View</button>
+                            <button onclick="deleteStaff('${staff.id}')" style="background:#ff4757;color:white;border:none;padding:5px 10px;border-radius:5px;">🗑️ Remove</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportStaff() {
+            alert('📥 Exporting staff data to CSV...\n\nStaff data will be downloaded with all details including:\n- Personal Information\n- Contact Details\n- Role & Salary\n- Join Date & Status');
+        }
+
+        // Tab switching
+        function showAdminTab(tabName, element) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            const sectionId = 'admin' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // Products Management
+        function loadProductsData() {
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = demoProducts.map(product => `
+                <tr>
+                    <td><img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;"></td>
+                    <td><strong>${product.name}</strong><br><small>SKU: ${product.sku}</small></td>
+                    <td>${product.category} - ${product.subcategory}</td>
+                    <td>₹${product.price}</td>
+                    <td>₹${product.wholesale_price}</td>
+                    <td style="color: ${product.stock < 10 ? '#ff6b6b' : product.stock < 20 ? '#feca57' : '#43e97b'};">${product.stock}</td>
+                    <td><span class="status-badge ${product.status === 'Active' ? 'status-confirmed' : 'status-cancelled'}">${product.status}</span></td>
+                    <td>
+                        <button onclick="editProduct('${product.id}')" style="background:#667eea;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">✏️ Edit</button>
+                        <button onclick="deleteProduct('${product.id}')" style="background:#ff4757;color:white;border:none;padding:5px 10px;border-radius:5px;">🗑️ Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function loadOrdersData() {
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = demoOrders.map(order => `
+                <tr>
+                    <td><strong>${order.order_number}</strong></td>
+                    <td>${order.customer_name}</td>
+                    <td>${order.customer_phone}</td>
+                    <td>₹${order.amount}</td>
+                    <td>
+                        <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:5px;border-radius:5px;">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
+                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>🔄 Processing</option>
+                            <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>🚚 Shipped</option>
+                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>📦 Delivered</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                        </select>
+                    </td>
+                    <td>${new Date(order.date).toLocaleDateString('hi-IN')}</td>
+                    <td>
+                        <button onclick="viewOrderDetails('${order.id}')" style="background:#667eea;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">👁️ View</button>
+                        <button onclick="printOrder('${order.id}')" style="background:#43e97b;color:white;border:none;padding:5px 10px;border-radius:5px;">🖨️ Print</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function loadInventoryData() {
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = demoProducts.map(product => {
+                const status = product.stock === 0 ? 'Out of Stock' : product.stock < 10 ? 'Low Stock' : 'Good Stock';
+                const statusColor = product.stock === 0 ? '#ff6b6b' : product.stock < 10 ? '#feca57' : '#43e97b';
+                
+                return `
+                    <tr style="${product.stock < 10 ? 'background: #fff5f5;' : ''}">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="${product.image}" alt="${product.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;">
+                                <strong>${product.name}</strong>
+                            </div>
+                        </td>
+                        <td>${product.category}</td>
+                        <td style="font-weight: bold; color: ${statusColor};">${product.stock} pieces</td>
+                        <td>10 pieces</td>
+                        <td><span style="padding: 4px 8px; background: ${statusColor}; color: white; border-radius: 12px; font-size: 12px;">${status}</span></td>
+                        <td>
+                            <button onclick="updateStock('${product.id}')" style="background:#667eea;color:white;border:none;padding:5px 10px;border-radius:5px;">📦 Update</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadCustomersData() {
+            const tbody = document.getElementById('customersTableBody');
+            tbody.innerHTML = demoCustomers.map(customer => `
+                <tr>
+                    <td><strong>${customer.name}</strong></td>
+                    <td>${customer.email}</td>
+                    <td>${customer.phone}</td>
+                    <td>${customer.orders}</td>
+                    <td>₹${customer.total_spent}</td>
+                    <td>${new Date(customer.joined).toLocaleDateString('hi-IN')}</td>
+                    <td>
+                        <button onclick="viewCustomer('${customer.id}')" style="background:#667eea;color:white;border:none;padding:5px 10px;border-radius:5px;margin-right:5px;">👁️ View</button>
+                        <button onclick="editCustomer('${customer.id}')" style="background:#43e97b;color:white;border:none;padding:5px 10px;border-radius:5px;">✏️ Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Modal functions
+        function showAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'flex';
+        }
+
+        function showNotifications() {
+            document.getElementById('notificationsModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Admin functions
+        function addProduct() {
+            const productData = {
+                category: document.getElementById('productCategory').value,
+                subcategory: document.getElementById('productSubcategory').value,
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                wholesale_price: parseFloat(document.getElementById('productWholesalePrice').value),
+                sku: document.getElementById('productSku').value,
+                quantity: parseInt(document.getElementById('productQuantity').value)
+            };
+
+            if (!productData.category || !productData.name || !productData.price) {
+                alert('कृपया सभी required fields भरें');
+                return;
+            }
+
+            alert('✅ Product successfully added!');
+            closeModal('addProductModal');
+            loadProductsData();
+        }
+
+        function editProduct(productId) {
+            alert(`Editing product: ${productId}`);
+        }
+
+        function deleteProduct(productId) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                alert(`Product ${productId} deleted!`);
+                loadProductsData();
+            }
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            alert(`Order ${orderId} status updated to: ${newStatus}`);
+        }
+
+        function viewOrderDetails(orderId) {
+            alert(`Viewing order details: ${orderId}`);
+        }
+
+        function printOrder(orderId) {
+            alert(`Printing order: ${orderId}`);
+        }
+
+        function updateStock(productId) {
+            const newStock = prompt('Enter new stock quantity:');
+            if (newStock && !isNaN(newStock)) {
+                alert(`Stock updated to ${newStock} pieces for product ${productId}`);
+                loadInventoryData();
+            }
+        }
+
+        function viewCustomer(customerId) {
+            alert(`Viewing customer: ${customerId}`);
+        }
+
+        function editCustomer(customerId) {
+            alert(`Editing customer: ${customerId}`);
+        }
+
+        function saveSettings() {
+            alert('⚙️ Settings saved successfully!');
+        }
+
+        function resetSettings() {
+            if (confirm('Reset all settings to default?')) {
+                alert('🔄 Settings reset to default values!');
+            }
+        }
+
+        function generateReport() {
+            alert('📊 Generating comprehensive business report...');
+        }
+
+        function exportData() {
+            alert('📥 Exporting data to CSV...');
+        }
+
+        // Search functions
+        function searchProducts() {
+            const query = document.getElementById('productSearch').value.toLowerCase();
+            alert(`Searching products: ${query}`);
+        }
+
+        function searchOrders() {
+            const query = document.getElementById('orderSearch').value.toLowerCase();
+            alert(`Searching orders: ${query}`);
+        }
+
+        function searchCustomers() {
+            const query = document.getElementById('customerSearch').value.toLowerCase();
+            alert(`Searching customers: ${query}`);
+        }
+
+        // Filter functions
+        function filterOrders(status) {
+            alert(`Filtering orders by: ${status}`);
+        }
+
+        function filterInventory(type) {
+            alert(`Filtering inventory by: ${type}`);
+        }
+
+        function filterCustomers(type) {
+            alert(`Filtering customers by: ${type}`);
+        }
+
+        async function logout() {
+            try {
+                localStorage.removeItem('currentUser');
+                alert('✅ Admin logout successful!');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+        console.log('🔧 Admin Panel Ready with Staff Management!');
+        console.log('📊 Dashboard loaded with demo data');
+        console.log('👨‍💼 Staff management system activated');
+        console.log('👑 Admin access granted');
+    </script>
+</body>
+</html>
